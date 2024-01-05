@@ -1,0 +1,82 @@
+import re
+import json
+import psycopg
+from psycopg.rows import dict_row, tuple_row
+
+class db_gateway:
+    __method_wh = {}
+
+    def __init__(this, conn, *sqlfiles):
+        this.__statement = conn.cursor()
+        for sqlfile in sqlfiles:
+            this.__import(sqlfile)
+        for method_name in this.__method_wh:
+            method_def = this.__method_wh[method_name]
+            if method_def['param_mode'] == 'named':
+                method_def['sql'] = re.sub(r'([^:])\B:([a-z_A-Z]\w+)\b', r'\1%(\2)s', method_def['sql'])
+            if method_def['param_mode'] == 'positional':
+                method_def['sql'] = re.sub(r'\B\?\B', '%s', method_def['sql'])
+
+    def __del__(this):
+        this.__statement.close();
+
+    def __method_factory(this, method_name, param_mode):
+        def sql_method(this, *args):
+            sql = this.__method_wh[method_name]['sql']
+            returns = this.__method_wh[method_name]['returns']
+            match param_mode:
+                case 'named': call_args = args[0]    
+                case 'positional': call_args = args    
+                case 'none': call_args = {}
+            this.__statement.row_factory = dict_row if returns in ('recordset', 'record') else tuple_row
+            this.__statement.execute(sql, call_args, prepare = True)
+            match returns:
+                case 'recordset':
+                    return this.__statement.fetchall()
+                case 'record':
+                    return this.__statement.fetchone()
+                case 'value':
+                    return this.__statement.fetchone()[0]
+                case 'none':
+                    return None
+        return sql_method
+
+    def __import(this, sqlfile):
+        method_name = None
+        f = open(sqlfile, 'r')
+        linelist = f.readlines()
+        f.close()
+        linecount = len(linelist)
+
+        for i in range(linecount):
+            line = linelist[i].strip()
+            error_context = f'file {sqlfile}, line {i + 1}: {line}'
+            if line[0:3] == '--!':
+
+                method_json = None
+                try: method_json = json.loads(line[3:])
+                except: pass
+
+                if not method_json:
+                    raise Exception (f'Invalid JSON, {error_context}')
+
+                if (
+                    len(method_json) != 3
+                    or not 'name' in method_json or not re.search(r'^[a-z_A-Z]\w+$', method_json['name'])
+                    or not 'returns' in method_json or not method_json['returns'] in ('recordset', 'record', 'value', 'none')
+                    or not 'param_mode' in method_json or not method_json['param_mode'] in ('named', 'positional', 'none')
+                   ):
+                    raise Exception (f'Invalid method specifier, {error_context}')
+                
+                method_name = method_json['name']
+                param_mode = method_json['param_mode']
+                
+                this.__method_wh[method_name] = {'sql':'', 'returns':method_json['returns'], 'param_mode':param_mode}
+                setattr(this.__class__, method_name, this.__method_factory(method_name, param_mode))                
+                continue
+
+            if line == '' or line[0:2] == '--': continue
+            if not method_name:
+                raise Exception (f'Syntax error, {error_context}')
+            else:
+                this.__method_wh[method_name]['sql'] += linelist[i]
