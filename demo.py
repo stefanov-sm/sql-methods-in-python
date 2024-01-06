@@ -15,7 +15,7 @@ print ('\r\npositional_record:', json.dumps(res, indent = 2))
 res = db.named_value({'seq':54321})
 print ('\r\nnamed_value:', res)
 
-res = db.positional_none(13, 123)
+res = db.positional_none(200000, 11)
 print ('\r\npositional_none:', res)
 
 db.commit()
