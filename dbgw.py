@@ -6,10 +6,14 @@ from psycopg.rows import dict_row, tuple_row
 class db_gateway:
     __method_wh = {}
 
-    def __init__(this, conn, *sqlfiles):
-        this.__statement = conn.cursor()
+    def __init__(this, conn, *sqlfiles, **commit_mode):
+
+        this.__conn = conn
+        this.__autocommit = commit_mode['autocommit'] if 'autocommit' in commit_mode else True
+
         for sqlfile in sqlfiles:
             this.__import(sqlfile)
+
         for method_name in this.__method_wh:
             method_def = this.__method_wh[method_name]
             if method_def['param_mode'] == 'named':
@@ -17,31 +21,32 @@ class db_gateway:
             if method_def['param_mode'] == 'positional':
                 method_def['sql'] = re.sub(r'\B\?\B', '%s', method_def['sql'])
 
-    def __del__(this):
-        this.__statement.close();
-
     def __method_factory(this, method_name, param_mode):
+
         def sql_method(this, *args):
-            sql = this.__method_wh[method_name]['sql']
             returns = this.__method_wh[method_name]['returns']
             match param_mode:
-                case 'named': call_args = args[0]    
-                case 'positional': call_args = args    
+                case 'named': call_args = args[0]
+                case 'positional': call_args = args
                 case 'none': call_args = {}
-            this.__statement.row_factory = dict_row if returns in ('recordset', 'record') else tuple_row
-            this.__statement.execute(sql, call_args, prepare = True)
-            match returns:
-                case 'recordset':
-                    return this.__statement.fetchall()
-                case 'record':
-                    return this.__statement.fetchone()
-                case 'value':
-                    return this.__statement.fetchone()[0]
-                case 'none':
-                    return None
+            with this.__conn.cursor() as statement:
+                statement.row_factory = dict_row if returns in ('recordset', 'record') else tuple_row
+                statement.execute(this.__method_wh[method_name]['sql'], call_args, prepare = True)
+                if this.__autocommit: this.__conn.commit()
+                match returns:
+                    case 'recordset':
+                        return statement.fetchall()
+                    case 'record':
+                        return statement.fetchone()
+                    case 'value':
+                        return statement.fetchone()[0]
+                    case 'none':
+                        return None
+
         return sql_method
 
     def __import(this, sqlfile):
+
         method_name = None
         f = open(sqlfile, 'r')
         linelist = f.readlines()
@@ -67,12 +72,12 @@ class db_gateway:
                     or not 'param_mode' in method_json or not method_json['param_mode'] in ('named', 'positional', 'none')
                    ):
                     raise Exception (f'Invalid method specifier, {error_context}')
-                
+
                 method_name = method_json['name']
                 param_mode = method_json['param_mode']
-                
+
                 this.__method_wh[method_name] = {'sql':'', 'returns':method_json['returns'], 'param_mode':param_mode}
-                setattr(this.__class__, method_name, this.__method_factory(method_name, param_mode))                
+                setattr(this.__class__, method_name, this.__method_factory(method_name, param_mode))
                 continue
 
             if line == '' or line[0:2] == '--': continue
