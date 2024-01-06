@@ -8,8 +8,8 @@ SQL method specifiers are lines that start with `--!` folowed by JSON with exact
 1. `"name"` - specifies the method name as a valid identifier, K&R style;
 2. `"returns"` - specifies the method return type. Can be one of:
    * `"value"` - a scalar;
-   * `"record"` - a JSON object representing a single record;
-   * `"recordset"` - a JSON array of objects;  
+   * `"record"` - a dictionary representing a single record;
+   * `"recordset"` - a list of dictionaries;  
    * `"none"`
 3. `"param_mode"` - specifies the SQL parameter style. Can be one of:
    * `"named"` - as in `where name = :name`;
