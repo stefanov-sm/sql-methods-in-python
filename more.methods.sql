@@ -10,3 +10,6 @@ where seq = :seq;
 
 --! {"name": "commit", "param_mode":"none", "returns": "none"}
 commit;
+
+--! {"name": "rollback", "param_mode":"none", "returns": "none"}
+rollback;
