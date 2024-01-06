@@ -2,6 +2,27 @@
 ### Define Python methods as SQL queries
 
 Implements DB-API 2.0 parameter styles `qmark` (like `where name = ?`) and `named` (like `where name = :name`).  
+Uses psycopg3 database driver and PostgreSQL. Can be ported to use any DB-API 2.0 database driver.
+
+SQL method specifiers are lines that start with `--!` folowed by JSON with exactly these mandatory attributes:
+1. `"name"` - specifies the method name as a valid identifier, K&R style;
+2. `"returns"` - specifies the method return type. Can be one of:
+   * `"value"` - a scalar;
+   * `"record"` - a JSON object representing a single record;
+   * `"recordset"` - a JSON array of objects;  
+   * `"none"`
+3. `"param_mode"` - specifies the SQL parameter style. Can be one of:
+   * `"named"` - as in `where name = :name`;
+   * `"positional"` - `qmark` style, as in `where name = ?`;
+   * `"none"`  
+
+Example: `--! {"name": "Roman_64_numerals", "param_mode":"positional", "returns": "recordset"}`
+
+Queries can be of any length and complexity. Comments, empty lines and leading/trailing whitespaces in SQL files are ignored.  
+
+> [!IMPORTANT]
+> SQL files must be UTF-8 encoded.
+
 ```python
 import json
 import psycopg
