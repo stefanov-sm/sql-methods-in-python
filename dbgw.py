@@ -38,10 +38,8 @@ class db_gateway:
                 case 'none': return None
 
     def __method_factory(this, method_name):
-        def sql_method(this, *args):
-            # closure method_name of current run
-            return this.__sql_runner(method_name, args)
-        return sql_method
+        return lambda this, *args: this.__sql_runner(method_name, args)
+        # closure method_name of the current run
 
     def __import(this, sqlfile):
 
