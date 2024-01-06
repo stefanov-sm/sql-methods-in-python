@@ -21,28 +21,30 @@ class db_gateway:
             if method_def['param_mode'] == 'positional':
                 method_def['sql'] = re.sub(r'\B\?\B', '%s', method_def['sql'])
 
-    def __method_factory(this, method_name, param_mode):
+    def __sql_runner(this, method_name, args):
+        returns = this.__method_wh[method_name]['returns']
+        match this.__method_wh[method_name]['param_mode']:
+            case 'named': call_args = args[0]
+            case 'positional': call_args = args
+            case 'none': call_args = {}
+        with this.__conn.cursor() as statement:
+            statement.row_factory = dict_row if returns in ('recordset', 'record') else tuple_row
+            statement.execute(this.__method_wh[method_name]['sql'], call_args, prepare = True)
+            if this.__autocommit: this.__conn.commit()
+            match returns:
+                case 'recordset':
+                    return statement.fetchall()
+                case 'record':
+                    return statement.fetchone()
+                case 'value':
+                    return statement.fetchone()[0]
+                case 'none':
+                    return None
 
+    def __method_factory(this, method_name):
         def sql_method(this, *args):
-            returns = this.__method_wh[method_name]['returns']
-            match param_mode:
-                case 'named': call_args = args[0]
-                case 'positional': call_args = args
-                case 'none': call_args = {}
-            with this.__conn.cursor() as statement:
-                statement.row_factory = dict_row if returns in ('recordset', 'record') else tuple_row
-                statement.execute(this.__method_wh[method_name]['sql'], call_args, prepare = True)
-                if this.__autocommit: this.__conn.commit()
-                match returns:
-                    case 'recordset':
-                        return statement.fetchall()
-                    case 'record':
-                        return statement.fetchone()
-                    case 'value':
-                        return statement.fetchone()[0]
-                    case 'none':
-                        return None
-
+            # closure method_name of current run
+            return this.__sql_runner(method_name, args)
         return sql_method
 
     def __import(this, sqlfile):
@@ -74,10 +76,9 @@ class db_gateway:
                     raise Exception (f'Invalid method specifier, {error_context}')
 
                 method_name = method_json['name']
-                param_mode = method_json['param_mode']
 
-                this.__method_wh[method_name] = {'sql':'', 'returns':method_json['returns'], 'param_mode':param_mode}
-                setattr(this.__class__, method_name, this.__method_factory(method_name, param_mode))
+                this.__method_wh[method_name] = {'sql':'', 'returns':method_json['returns'], 'param_mode':method_json['param_mode']}
+                setattr(this.__class__, method_name, this.__method_factory(method_name))
                 continue
 
             if line == '' or line[0:2] == '--': continue
