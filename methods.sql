@@ -6,7 +6,7 @@ from tests.the_table
 where seq between :seq_from and :seq_to
   and status = :status
 order by seq
-limit 10;
+limit 5;
 
 --! {"name": "positional_record", "param_mode": "positional", "returns":"record"}
 select ts::text, value, status
