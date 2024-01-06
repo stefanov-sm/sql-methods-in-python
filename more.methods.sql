@@ -7,3 +7,6 @@ from generate_series(1, ?, 1) as t(n);
 --! {"name": "cleanup", "param_mode":"named", "returns": "none"}
 delete from tests.the_table
 where seq = :seq;
+
+--! {"name": "commit", "param_mode":"none", "returns": "none"}
+commit;
