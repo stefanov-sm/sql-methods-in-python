@@ -32,14 +32,10 @@ class db_gateway:
             statement.execute(this.__method_wh[method_name]['sql'], call_args, prepare = True)
             if this.__autocommit: this.__conn.commit()
             match returns:
-                case 'recordset':
-                    return statement.fetchall()
-                case 'record':
-                    return statement.fetchone()
-                case 'value':
-                    return statement.fetchone()[0]
-                case 'none':
-                    return None
+                case 'recordset': return statement.fetchall()
+                case 'record': return statement.fetchone()
+                case 'value': return statement.fetchone()[0]
+                case 'none': return None
 
     def __method_factory(this, method_name):
         def sql_method(this, *args):
