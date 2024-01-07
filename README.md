@@ -44,7 +44,7 @@ with psycopg.connect(<CONNECTIONSTRING>) as conn:
                        <PATH-TO-SQLFILES> + 'methods.sql', <PATH-TO-SQLFILES> + 'more.methods.sql',
                        autocommit = False
                       )
-  res = db.named_recordset({'seq_from': 1000, 'seq_to': 1099, 'status': 5})
+  res = db.named_recordset({'seq_from':1000, 'seq_to':1099, 'status':5})
   print ('\r\nnamed_recordset:', json.dumps(res, indent = 2))
   res = db.positional_record(12345)
   print ('\r\npositional_record:', json.dumps(res, indent = 2))
