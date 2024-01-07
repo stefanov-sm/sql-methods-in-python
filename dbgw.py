@@ -12,26 +12,24 @@ class db_gateway:
 
         for sqlfile in sqlfiles: this.__import(sqlfile)
 
-        # rewrite named and qmark paramstyle (DB-API 2.0) queries to pyformat paramstyle
-        for method_name in this.__method_wh:
+        for method_name in this.__method_wh: # Rewrite named and qmark paramstyle (DB-API 2.0) queries to pyformat paramstyle
             method_def = this.__method_wh[method_name]
             match method_def['param_mode']:
                 case 'named': method_def['sql'] = re.sub(r'([^:])\B:([a-z_A-Z]\w+)\b', r'\1%(\2)s', method_def['sql'])
                 case 'positional': method_def['sql'] = re.sub(r'\B\?\B', '%s', method_def['sql'])
 
-    def __method_factory(this, method_name):
-        # Freeze "method_name" of the current run context
-        def sql_method(this, *args):
-            ret_mode = this.__method_wh[method_name]['returns']
-            match this.__method_wh[method_name]['param_mode']:
+    def __method_factory(ignored, context):
+        def sql_method(*args): # Freeze (closure) context
+            method_def = context['method_def']
+            match method_def['param_mode']:
                 case 'named': call_args = args[0]
                 case 'positional': call_args = args
                 case 'none': call_args = {}
-            with this.__conn.cursor() as statement:
-                statement.row_factory = dict_row if ret_mode in ('recordset', 'record') else tuple_row
-                statement.execute(this.__method_wh[method_name]['sql'], call_args, prepare = True)
-                if this.__autocommit: this.__conn.commit()
-                match ret_mode:
+            with context['conn'].cursor() as statement:
+                statement.row_factory = dict_row if method_def['returns'] in ('recordset', 'record') else tuple_row
+                statement.execute(method_def['sql'], call_args, prepare = True)
+                if context['autocommit']: context['conn'].commit()
+                match method_def['returns']:
                     case 'recordset': return statement.fetchall()
                     case 'record': return statement.fetchone()
                     case 'value': return statement.fetchone()[0]
@@ -64,7 +62,8 @@ class db_gateway:
 
                 method_name = method_json['name']
                 this.__method_wh[method_name] = {'sql':'', 'returns':method_json['returns'], 'param_mode':method_json['param_mode']}
-                setattr(this.__class__, method_name, this.__method_factory(method_name))
+                running_context = {'method_def':this.__method_wh[method_name], 'conn':this.__conn, 'autocommit':this.__autocommit}
+                setattr(this, method_name, this.__method_factory(running_context)) # Attach a function (not a bound method)
                 continue
 
             if line == '' or line[0:2] == '--': continue
