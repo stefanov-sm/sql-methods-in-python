@@ -20,4 +20,4 @@ where seq = :seq;
 
 --! {"name": "positional_none", "param_mode": "positional", "returns":"none"}
 insert into tests.the_table (seq, status)
-values (?, ?);
+select s, ? from generate_series (200000, 200000 + ?, 1) s;
