@@ -5,9 +5,9 @@ with t as
    with t as
    (
     select *,
-    (rn - 1) %% 5 col_no,
+    (rn - 1) %% 5 col_no, -- double the % modulo operator because of Psycopg
     (rn - 1) / 5 row_no
-    from tests.spreadsheetml_table(?::xml)
+    from spreadsheetml_table(?::xml)
    )
    select
      max(cell_data) filter (where col_no = 0) subject,
@@ -30,9 +30,9 @@ with t as
    with t as
    (
     select *,
-    (rn - 1) %% 5 col_no,
+    (rn - 1) %% 5 col_no,  double the % modulo operator because of Psycopg
     (rn - 1) / 5 row_no
-    from tests.spreadsheetml_fromfile(?)
+    from spreadsheetml_fromfile(?)
    )
    select
      max(cell_data) filter (where col_no = 0) subject,
