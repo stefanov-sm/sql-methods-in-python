@@ -3,7 +3,7 @@ import psycopg
 import dbgw
 import app_settings as cfg
 
-DATAFILENAME = 'D:\\temp\\ecb.xml'
+DATAFILENAME = 'path-to/ecb.xml'
 with psycopg.connect(cfg.CONNECTIONSTRING) as conn:
 
   db = dbgw.db_gateway(conn, cfg.SQLPATH + 'hardtest.sql', autocommit = True)
