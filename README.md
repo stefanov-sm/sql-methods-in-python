@@ -27,6 +27,8 @@ Example:
     --! {"name": "Roman_64_numerals", "param_mode": "positional", "returns": "recordset"}
 
 Queries can be of any length and complexity. Comments, empty lines and leading/trailing whitespaces in SQL files are ignored.  
+> [!IMPORTANT]
+> Psycopg treats percent signs as SQL parameter placeholders. Therefore the PostgreSQL modulo operator (`%`) must be doubled as `%%` in queries.
 
 > [!IMPORTANT]
 > SQL files must be UTF-8 encoded.  
