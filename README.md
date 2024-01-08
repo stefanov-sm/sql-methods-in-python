@@ -5,7 +5,7 @@ Uses **Psycopg 3** database driver and PostgreSQL. Can be ported to use another 
 Implements [parameter styles](https://peps.python.org/pep-0249/#paramstyle) `qmark` (like `where name = ?`) and `named` (like `where name = :name`).  
 
 #### Methods definition
-Methods are defined in SQL files (see *methods.sql*) that consist of one or more sections like this:
+Methods are defined in SQL files (see [methods.sql](https://github.com/stefanov-sm/sql-methods-in-python/blob/main/methods.sql)) that consist of one or more sections like this:
 ```
 sql method specifier line
 line(s) of SQL code
@@ -36,7 +36,8 @@ Queries can be of any length and complexity. Comments, empty lines and leading/t
 where `autocommit_mode` (optional) can be `autocommit = True` (the default) or `autocommit = False`  
   
 #### Usage example
-Usage illustration and details in demo files (*demo.py*, *methods.sql* and *more.methods.sql*)
+Usage illustration and details in demo files ([demo.py](https://github.com/stefanov-sm/sql-methods-in-python/blob/main/demo.py), [methods.sql](https://github.com/stefanov-sm/sql-methods-in-python/blob/main/methods.sql) and [more.methods.sql](https://github.com/stefanov-sm/sql-methods-in-python/blob/main/more.methods.sql)).  
+[demo.table.ddl.sql](https://github.com/stefanov-sm/sql-methods-in-python/blob/main/demo.table.ddl.sql) creates and populates the demo table in schema `tests`.
 ```python
 import json
 import psycopg
