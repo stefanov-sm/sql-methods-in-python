@@ -64,3 +64,8 @@ with psycopg.connect(<CONNECTIONSTRING>) as conn:
   res = db.cleanup({'seq':200000});
   db.commit()
   print ('\r\ncleanup:', res)
+```
+#### HardTest
+Implements [Read-Excel-into-PostgreSQL](https://github.com/stefanov-sm/Read-Excel-into-PostgreSQL) wizardry to ETL an Excel spreadsheet saved as XML (76 MBytes).  
+Here are the results on a very modest laptop:  
+![image](https://github.com/stefanov-sm/sql-methods-in-python/assets/26185804/7872a9fd-e00c-49f2-96b3-a4c9cc3fb4fa)
