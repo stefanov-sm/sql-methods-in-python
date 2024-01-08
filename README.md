@@ -1,7 +1,7 @@
 # sql-methods-in-python
 ### Define Python methods as SQL queries
 
-Uses **Psycopg 3** database driver and PostgreSQL. Can be ported to use another DB-API 2.0 compliant database driver.  
+Uses **Psycopg 3** database driver and PostgreSQL. Can be ported to another DB-API 2.0 compliant driver/database.  
 Implements [parameter styles](https://peps.python.org/pep-0249/#paramstyle) `qmark` (like `where name = ?`) and `named` (like `where name = :name`).  
 
 #### Methods definition
@@ -10,7 +10,7 @@ Methods are defined in SQL files (see [methods.sql](https://github.com/stefanov-
 sql method specifier line
 line(s) of SQL code
 ```
-A SQL method specifier line start with `--!` folowed by JSON with exactly these attributes:
+A SQL method specifier is an annotation-like comment line that start with `--!` folowed by JSON with exactly these attributes:
 1. **name** - specifies the method name as a valid identifier, K&R style;
 2. **returns** - specifies the method return type. Can be one of:
    * **value** - returns a scalar;
