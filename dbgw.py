@@ -41,33 +41,30 @@ class db_gateway:
         f = open(sqlfile, 'r')
         linelist = f.readlines()
         f.close()
-        linecount = len(linelist)
 
-        for i in range(linecount):
+        for i in range(len(linelist)):
             line = linelist[i].strip()
-            error_context = f'file {sqlfile}, line {i + 1}: {line}'
             if line[0:3] == '--!':
-                method_json = None 
+
                 try: method_json = json.loads(line[3:])
-                except: pass
-                if not method_json:
-                    raise Exception (f'Invalid JSON, {error_context}')
+                except: pass                   
                 if (
-                    len(method_json) != 3
+                    not 'method_json' in locals() or len(method_json) != 3
                     or not 'name' in method_json or not re.search(r'^[a-z_A-Z]\w+$', method_json['name'])
                     or not 'returns' in method_json or not method_json['returns'] in ('recordset', 'record', 'value', 'none')
                     or not 'param_mode' in method_json or not method_json['param_mode'] in ('named', 'positional', 'none')
                    ):
-                    raise Exception (f'Invalid method specifier, {error_context}')
+                    raise Exception (f'Invalid method specifier, file {sqlfile}, line {i + 1}')
 
                 method_name = method_json['name']
                 this.__method_wh[method_name] = {'sql':'', 'returns':method_json['returns'], 'param_mode':method_json['param_mode']}
                 running_context = {'method_def':this.__method_wh[method_name], 'conn':this.__conn, 'autocommit':this.__autocommit}
-                setattr(this, method_name, this.__method_factory(running_context)) # Attach a function (not a bound method)
+                setattr(this, method_name, this.__method_factory(running_context)) # Attached function, not a bound method
+
                 continue
 
             if line == '' or line[0:2] == '--': continue
             if not method_name:
-                raise Exception (f'Syntax error, {error_context}')
+                raise Exception (f'Code found before a method is specified, file {sqlfile}, line {i + 1}')
             else:
                 this.__method_wh[method_name]['sql'] += linelist[i]
